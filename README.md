@@ -39,7 +39,7 @@ options:
 
 #### Enumerate subdomains and only write domains with active A record to file (csv output containing domain, record type and ip)
 ```
-.crtsh_auto.py -oDwD <output> example.com
+./crtsh_auto.py -oDwD <output> example.com
 ```
 
 
