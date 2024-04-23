@@ -117,7 +117,11 @@ def getDomains(args):
 	return domains
 
 
-
+def verifyDomains(domains, args):
+	for domain in domain:
+		#TODO: Send get to http, https, then post to http, https
+		
+		#TODO: Store full request and response
 
 # Print banner
 
@@ -143,9 +147,10 @@ parser.add_argument("-txt" ,help="txt file of subdomains to enumerate")
 parser.add_argument("-csv", help="csv file containing ONLY Domains!")
 parser.add_argument("-oD", help="File to output found domains to. !NOT ONLY! domains with dns entry!")
 parser.add_argument("-oDwD", help="File to output found domains incl record type as csv")
+parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
 args = parser.parse_args()
 
-print(args)
+
 # get Domains
 print("[+] getting domains!")
 domains = getDomains(args)
@@ -172,7 +177,8 @@ if args.oDwD:
 
 
 # Check http / https with Get & POST and Save
-
+if args.verify:
+	verifyDomains(domains, args)
 
 # Check requests made for anomalies, custom headers etc
 
