@@ -214,8 +214,8 @@ parser.add_argument("-txt" ,help="txt file of subdomains to enumerate")
 parser.add_argument("-csv", help="csv file containing ONLY Domains!")
 parser.add_argument("-oD", help="File to output found domains to. !NOT ONLY! domains with dns entry!")
 parser.add_argument("-oDwD", help="File to output found domains incl record type as csv")
-#parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
-#parser.add_argument("-all" , action="store_true", help="if enabled checks for expired certs too" )
+parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
+parser.add_argument("-all" , action="store_true", help="if enabled checks for expired certs too" )
 args = parser.parse_args()
 
 
