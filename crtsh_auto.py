@@ -4,7 +4,9 @@ import requests
 import argparse
 import re
 import dns.resolver
+import json
 
+requests.packages.urllib3.disable_warnings() 
 
 def extract_subdomains(text, domain):
 	pattern = r'\b(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+{}(?=\s|\b)'.format(re.escape(domain))
@@ -13,6 +15,37 @@ def extract_subdomains(text, domain):
 	return set(dup)
 
 def queryCrtSh(domain):
+	print(f"[+] Start Query crt.sh for {domain}... ")
+	url=""
+	if args.all:
+		url=f"https://crt.sh/?Identity={domain}&output=json"
+	else:
+		url=f"https://crt.sh/?Identity={domain}&exclude=expired&output=json"
+	
+	x= requests.get(url)
+	if x.status_code == 200:
+		domains = json.loads(x.text)
+		xtracted_doms = list()
+		
+		for entry in domains:
+			xtracted_doms.append(entry['common_name'])
+			##print(entry['common_name'])
+			var = entry['name_value'].split("\n")
+			#print(var)
+			#input()
+			xtracted_doms.extend(list(entry['name_value'].split("\n")))
+			#print(xtracted_doms)
+		xtracted_doms = set(xtracted_doms)
+		for sub in xtracted_doms:
+			print("\t\t"+str(sub))
+		print(f"[+] Found {len(xtracted_doms)} Subdomains")
+		return xtracted_doms
+	else:
+		print(f"[-] crt.sh returns {x.status_code}")
+		print("[-] Error reading crt.sh, Bye!")
+		exit(0)
+			
+def queryCrtShhtml(domain):
 	print("[+] Query crt.sh")
 	x= requests.get(f"https://crt.sh/?Identity={domain}&exclude=expired")
 	if x.status_code == 200:
@@ -85,7 +118,7 @@ def dnsHealthCheck(domains, records):
 				print(f"\t\t{domain} with {record_type} ips: {ips}")
 				domains_with_records.append(domain + "|" + str(record_type) + "|" + str(ips))
 				pass
-			except dns.resolver.NoAnswer:
+			except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
 				continue 
 	print(f"[+] Found {len(domains_with_records)} domains with dns record")
 	return domains_with_records
@@ -103,7 +136,7 @@ def getDomains(args):
 		domains.update(queryCrtSh(args.domain))
 		
 		
-	if args.txt == None and args.csv == None and not args.no_crtsh:
+	if args.txt == None and args.csv == None and args.no_crtsh:
 		print("[-] Error no subdomain input found.")
 
 	# parse txt file	
@@ -118,10 +151,44 @@ def getDomains(args):
 
 
 def verifyDomains(domains, args):
-	for domain in domain:
-		#TODO: Send get to http, https, then post to http, https
+	print(f"[+] Verifying {len(domains)} hosts ...")
+	verifyed_domains = list()
+	
+	print(f"[+] starting HTTP GET")
+	for domain in domains:
+		try:
+			x = requests.get(f"http://{domain}")
+			verifyed_domains[domain] = {"http": { "get" : x}}
+			
+			print(f"\t\t GET -> {domain} returns {x.status_code}")
+			
+		except:
+			print(f"\t\t No Response from {domain}")
+			pass
 		
-		#TODO: Store full request and response
+	print(f"[+] starting HTTPS GET")
+	for domain in domains:
+		try:
+			x = requests.get(f"https://{domain}")
+			verifyed_domains.append(list(f"https://{domain}", x))
+			print(f"\t\t GET -> {domain} returns {x.status_code}")
+			
+		except:
+			print(f"\t\t No Response from {domain}")
+			pass
+		
+	print(f"[+] starting HTTP POST")
+	for domain in domains:
+		try:
+			x = requests.post(f"https://{domain}")
+			verifyed_domains.append(list(f"https://{domain}", x))
+			print(f"\t\t GET -> {domain} returns {x.status_code}")
+			
+		except:
+			print(f"\t\t No Response from {domain}")
+			pass
+
+
 
 # Print banner
 
@@ -147,7 +214,8 @@ parser.add_argument("-txt" ,help="txt file of subdomains to enumerate")
 parser.add_argument("-csv", help="csv file containing ONLY Domains!")
 parser.add_argument("-oD", help="File to output found domains to. !NOT ONLY! domains with dns entry!")
 parser.add_argument("-oDwD", help="File to output found domains incl record type as csv")
-parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
+#parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
+#parser.add_argument("-all" , action="store_true", help="if enabled checks for expired certs too" )
 args = parser.parse_args()
 
 
