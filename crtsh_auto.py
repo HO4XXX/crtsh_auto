@@ -168,7 +168,7 @@ domains_with_dns = dnsHealthCheck(domains, ['A'])
 
 if args.oDwD:
 	file = open(args.oDwD, "w")
-	file.write(domains_with_dns.replace("|", ";") )
+	file.write('\n'.join([s.replace('|', ';') for s in domains_with_dns]))
 
 
 # Check http / https with Get & POST and Save
