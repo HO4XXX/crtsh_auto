@@ -1,6 +1,6 @@
 # crtsh_auto
 
-
+```
 
              )        )                      )                     
      (    ( /(     ( /(          )    (   ( /(                (    
@@ -26,3 +26,4 @@ options:
   -oD OD      File to output found domains to. !NOT ONLY! domains with dns entry!
   -oDwD ODWD  File to output found domains incl record type as csv
 
+```
