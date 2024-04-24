@@ -27,3 +27,20 @@ options:
   -oDwD ODWD  File to output found domains incl record type as csv
 
 ```
+
+
+## Examples
+
+#### Enumerarte subdomains and write file raw txt file with unchecked Domains:
+
+```
+./crtsh_auto.py -oD <output> example.com
+```
+
+#### Enumerate subdomains and only write domains with active A record to file (csv output containing domain, record type and ip)
+```
+./crtsh_auto.py -oDwD <output> example.com
+```
+
+
+
