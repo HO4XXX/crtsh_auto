@@ -157,14 +157,20 @@ def capture_screenshot_and_get_headers(domain, subdomain, protocol, args):
  
 
 	response = None
-	if args.U:
+	timeout = 20
+	if args.timeout:
+		timeout = args.timeout
+		
+	try:
+		if args.U:
 
-		response = requests.get(f"{protocol}://{subdomain}/", headers = {"User-Agent" : args.U})
+			response = requests.get(f"{protocol}://{subdomain}/", headers = {"User-Agent" : args.U}, timeout = timeout)
 
-   
-	else:
-		response = requests.get(f"{protocol}://{subdomain}/")
-
+	   
+		else:
+			response = requests.get(f"{protocol}://{subdomain}/", timeout=timeout)
+	except:
+		return None
 	
 	headers = response.headers
 	code = response.status_code
@@ -209,8 +215,23 @@ def verifyDomains(domains, args):
 		http= capture_screenshot_and_get_headers(args.domain, domain, "http", args)
 		if args.rate_limit != None:
 			time.sleep(1/args.rate_limit)
-		current={"subdomain": domain, "https": https, "http": http}
-		verifyed_domains.append(current)
+		
+		
+		if https != None:
+		
+			https_serial = {"status_code": https.status_code, "text": https.text, "headers": dict(https.headers)}
+		else:
+			https_serial = None
+			
+		if http != None:
+			
+			http_serial = {"status_code": http.status_code, "text": http.text, "headers": dict(http.headers)}
+			
+		else:
+			http_serial = None
+			
+		current=dict({"subdomain": domain, "https": https_serial, "http": http_serial})
+		verifyed_domains.append( current)
 	
 	return verifyed_domains
 	
@@ -247,10 +268,8 @@ parser.add_argument("-all" , action="store_true", help="if enabled checks for ex
 parser.add_argument("-U", help="define custom user Agent to send in Http requests")
 parser.add_argument("--rate-limit" , type = int, help="Limit requests to n per Second")
 parser.add_argument("-screenshot", action="store_true", help="Use Selenium only if this is activated. Screenshots are saved in a new generated directory with the name of the scanned domain.")
+parser.add_argument("-timeout", type=int, help="define http timeout in seconds (default 20)")
 args = parser.parse_args()
-
-#TODO: Implement custom DNS Server!!!!
-#TODO: Implement Plaintext (only domains) ooutput for oDwD!
 
 
 # get Domains

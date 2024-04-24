@@ -2,6 +2,7 @@
 
 ```
 
+
              )        )                      )                     
      (    ( /(     ( /(          )    (   ( /(                (    
   (  )(   )\())(   )\())      ( /(   ))\  )\()) (      `  )   )\ ) 
@@ -13,21 +14,37 @@
 
 
 
-usage: crtsh_auto.py [-h] [--no-crtsh] [-txt TXT] [-csv CSV] [-oD OD] [-oDwD ODWD] domain
+usage: crtsh_auto.py [-h] [--no-crtsh] [-txt TXT] [-csv CSV] [-oD OD] [-oDwD ODWD] [-verify] [--out-txt] [--out-fullresponses OUT_FULLRESPONSES] [-all] [-U U] [--rate-limit RATE_LIMIT] [-screenshot] [-timeout TIMEOUT] domain
 
 positional arguments:
-  domain      the domain you want to enumerate for subs
+  domain                the domain you want to enumerate for subs
 
 options:
-  -h, --help  show this help message and exit
-  --no-crtsh  if this is set no requests to crt.sh will be made. _csv or -txt must be set
-  -txt TXT    txt file of subdomains to enumerate
-  -csv CSV    csv file containing ONLY Domains!
-  -oD OD      File to output found domains to. !NOT ONLY! domains with dns entry!
-  -oDwD ODWD  File to output found domains incl record type as csv
+  -h, --help            show this help message and exit
+  --no-crtsh            if this is set no requests to crt.sh will be made. _csv or -txt must be set
+  -txt TXT              txt file of subdomains to enumerate
+  -csv CSV              csv file containing ONLY Domains!
+  -oD OD                File to output found domains to. !NOT ONLY! domains with dns entry!
+  -oDwD ODWD            File to output found domains incl record type as csv
+  -verify               Verify found domains with http & https
+  --out-txt             Save file type. If set, output od -oDwD will be text file only containing the domains!
+  --out-fullresponses OUT_FULLRESPONSES
+                        save json file to defined file containing all responses. Only works with verify
+  -all                  if enabled checks for expired certs too
+  -U U                  define custom user Agent to send in Http requests
+  --rate-limit RATE_LIMIT
+                        Limit requests to n per Second
+  -screenshot           Use Selenium only if this is activated. Screenshots are saved in a new generated directory with the name of the scanned domain.
+  -timeout TIMEOUT      define http timeout in seconds (default 20)
 
 ```
+## What it does:
 
+1. get all subdomains from crt.sh
+2. read txt/csv file from disk and add it to found domains (optional)
+3. deduplicate all found domains
+4. check domain via DNS. Is there a A record? 
+5. Check if domains answer to http / https (default ports) (optional)
 
 ## Examples
 
