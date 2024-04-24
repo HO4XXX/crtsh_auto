@@ -46,6 +46,38 @@ options:
 4. check domain via DNS. Is there a A record? 
 5. Check if domains answer to http / https (default ports) (optional)
 
+
+## Json Format:
+the output json loks like this: 
+```
+[
+{
+    "subdomain": "test.test.com",
+    "https": {
+      "status_code": 404,
+      "text": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\n </BODY>\n</HTML>\n",                                                               
+      "headers": {
+        "Server": "AkamaiGHost",
+        "Mime-Version": "1.0",
+        "Content-Type": "text/html",
+        "Connection": "close"
+      }
+    },
+    "http": {
+      "status_code": 403,
+      "text": "<HTML><HEAD>\n<TITLE>Access Denied</TITLE>\n</HEAD><BODY>\n<H1>Access Denied</H1>\</BODY>\n</HTML>\n",                                                               
+      "headers": {
+        "Server": "AkamaiGHost",
+        "Mime-Version": "1.0",
+        "Content-Type": "text/html",
+        "Connection": "close"
+      }
+    }
+  }, 
+  ...
+]
+```
+
 ## Examples
 
 #### Enumerarte subdomains and write file raw txt file with unchecked Domains:
