@@ -154,6 +154,7 @@ def verifyDomains(domains, args):
 	print(f"[+] Verifying {len(domains)} hosts ...")
 	verifyed_domains = list()
 	
+	'''
 	print(f"[+] starting HTTP GET")
 	for domain in domains:
 		try:
@@ -187,7 +188,7 @@ def verifyDomains(domains, args):
 		except:
 			print(f"\t\t No Response from {domain}")
 			pass
-
+	'''
 
 
 # Print banner
@@ -214,9 +215,13 @@ parser.add_argument("-txt" ,help="txt file of subdomains to enumerate")
 parser.add_argument("-csv", help="csv file containing ONLY Domains!")
 parser.add_argument("-oD", help="File to output found domains to. !NOT ONLY! domains with dns entry!")
 parser.add_argument("-oDwD", help="File to output found domains incl record type as csv")
-parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https GT & POST requests")
+parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https with screenshots. Screenshots are saved in a new generated directory with the name of the scanned domain.")
+parser.add_argument("--out-txt" ,action="store_true", help="Save file type. If set, output od -oDwD will be text file only containing the domains!")
 parser.add_argument("-all" , action="store_true", help="if enabled checks for expired certs too" )
 args = parser.parse_args()
+
+#TODO: Implement custom DNS Server!!!!
+#TODO: Implement Plaintext (only domains) ooutput for oDwD!
 
 
 # get Domains
@@ -241,7 +246,10 @@ domains_with_dns = dnsHealthCheck(domains, ['A'])
 
 if args.oDwD:
 	file = open(args.oDwD, "w")
-	file.write('\n'.join([s.replace('|', ';') for s in domains_with_dns]))
+	if args.out_txt:
+		file.write('\n'.join([s.split('|')[0] for s in domains_with_dns]))
+	else:
+		file.write('\n'.join([s.replace('|', ';') for s in domains_with_dns]))
 
 
 # Check http / https with Get & POST and Save
