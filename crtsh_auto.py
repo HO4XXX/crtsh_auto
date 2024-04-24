@@ -5,6 +5,9 @@ import argparse
 import re
 import dns.resolver
 import json
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 requests.packages.urllib3.disable_warnings() 
 
@@ -149,46 +152,68 @@ def getDomains(args):
 	
 	return domains
 
+def capture_screenshot_and_get_headers(domain, subdomain, protocol, args):
+    # Fetch the webpage to get the response headers
+ 
+
+	response = None
+	if args.U:
+
+		response = requests.get(f"{protocol}://{subdomain}/", headers = {"User-Agent" : args.U})
+
+   
+	else:
+		response = requests.get(f"{protocol}://{subdomain}/")
+
+	
+	headers = response.headers
+	code = response.status_code
+	print(f"\t\t{subdomain} - {protocol} - {code}")
+ 
+	if args.screenshot:
+	# Set up Selenium WebDriver to capture the screenshot
+		chrome_options = Options()
+		chrome_options.add_argument("--headless")  # Run Chrome in headless mode (no GUI)
+		    
+		chrome_options.add_argument(f"User-Agent={args.U}")
+		   
+		driver = webdriver.Chrome(options=chrome_options)
+		
+		try:
+				# Open the URL in Chrome
+			print(1)
+			driver.get(f"{protocol}://{subdomain}/")
+			print(1)
+			# Capture the screenshot
+			screenshot_path = f"./{domain}/{protocol}.{code}.{subdomain}.png"
+			driver.save_screenshot(screenshot_path)
+			print("Screenshot captured successfully.")
+		except Exception as e:
+			print("Error capturing screenshot:", e)
+		finally:
+			driver.quit()  # Close the WebDriver session
+    
+	return response
 
 def verifyDomains(domains, args):
 	print(f"[+] Verifying {len(domains)} hosts ...")
 	verifyed_domains = list()
 	
-	'''
-	print(f"[+] starting HTTP GET")
 	for domain in domains:
-		try:
-			x = requests.get(f"http://{domain}")
-			verifyed_domains[domain] = {"http": { "get" : x}}
-			
-			print(f"\t\t GET -> {domain} returns {x.status_code}")
-			
-		except:
-			print(f"\t\t No Response from {domain}")
-			pass
+		#print(domain)
+		current= {}
+		https = capture_screenshot_and_get_headers(args.domain, domain, "https", args)
 		
-	print(f"[+] starting HTTPS GET")
-	for domain in domains:
-		try:
-			x = requests.get(f"https://{domain}")
-			verifyed_domains.append(list(f"https://{domain}", x))
-			print(f"\t\t GET -> {domain} returns {x.status_code}")
-			
-		except:
-			print(f"\t\t No Response from {domain}")
-			pass
-		
-	print(f"[+] starting HTTP POST")
-	for domain in domains:
-		try:
-			x = requests.post(f"https://{domain}")
-			verifyed_domains.append(list(f"https://{domain}", x))
-			print(f"\t\t GET -> {domain} returns {x.status_code}")
-			
-		except:
-			print(f"\t\t No Response from {domain}")
-			pass
-	'''
+		if args.rate_limit != None:
+			time.sleep(1/args.rate_limit)
+		http= capture_screenshot_and_get_headers(args.domain, domain, "http", args)
+		if args.rate_limit != None:
+			time.sleep(1/args.rate_limit)
+		current={"subdomain": domain, "https": https, "http": http}
+		verifyed_domains.append(current)
+	
+	return verifyed_domains
+	
 
 
 # Print banner
@@ -215,9 +240,13 @@ parser.add_argument("-txt" ,help="txt file of subdomains to enumerate")
 parser.add_argument("-csv", help="csv file containing ONLY Domains!")
 parser.add_argument("-oD", help="File to output found domains to. !NOT ONLY! domains with dns entry!")
 parser.add_argument("-oDwD", help="File to output found domains incl record type as csv")
-parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https with screenshots. Screenshots are saved in a new generated directory with the name of the scanned domain.")
+parser.add_argument("-verify", action="store_true", help="Verify found domains with http & https")
 parser.add_argument("--out-txt" ,action="store_true", help="Save file type. If set, output od -oDwD will be text file only containing the domains!")
+parser.add_argument("--out-fullresponses", help="save json file to defined file containing all responses. Only works with verify")
 parser.add_argument("-all" , action="store_true", help="if enabled checks for expired certs too" )
+parser.add_argument("-U", help="define custom user Agent to send in Http requests")
+parser.add_argument("--rate-limit" , type = int, help="Limit requests to n per Second")
+parser.add_argument("-screenshot", action="store_true", help="Use Selenium only if this is activated. Screenshots are saved in a new generated directory with the name of the scanned domain.")
 args = parser.parse_args()
 
 #TODO: Implement custom DNS Server!!!!
@@ -243,6 +272,7 @@ if args.oD:
 print(f"[+] Checking {len(domains)} Domains via DNS")
 #IMPORTANT: format = <domain>|<reocrd_type>
 domains_with_dns = dnsHealthCheck(domains, ['A'])
+domains = [s.split('|')[0] for s in domains_with_dns]
 
 if args.oDwD:
 	file = open(args.oDwD, "w")
@@ -253,9 +283,14 @@ if args.oDwD:
 
 
 # Check http / https with Get & POST and Save
+print(f"[+] Verifying {len(domains)} Domains via HTTP / HTTPS")
 if args.verify:
-	verifyDomains(domains, args)
+	verifyed_domains=verifyDomains(domains, args)
+	if args.out_fullresponses:
+		file = open(args.out_fullresponses, "w")
+		file.write(json.dumps(verifyed_domains))
 
+	
 # Check requests made for anomalies, custom headers etc
 
 
