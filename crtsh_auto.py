@@ -121,7 +121,7 @@ def dnsHealthCheck(domains, records):
 				print(f"\t\t{domain} with {record_type} ips: {ips}")
 				domains_with_records.append(domain + "|" + str(record_type) + "|" + str(ips))
 				pass
-			except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+			except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN, dns.resolver.SERVFAIL):
 				continue 
 	print(f"[+] Found {len(domains_with_records)} domains with dns record")
 	return domains_with_records
